@@ -6,7 +6,6 @@ main =
   Html.beginnerProgram { model = 0, view = view, update = update }
 
 -- MODEL
-
 type alias Model = Int
 -- type alias TodoItem =
 --     { item : String
@@ -27,7 +26,6 @@ update msg model =
   case msg of
     Increment ->
         model + 3
--- , model,  31)
 
     Decrement ->
       model - 1
@@ -42,8 +40,6 @@ view model =
     , listTable model
     ]
 
--- 
-
 listTable : Model -> Html Msg
 listTable model =
     let
@@ -53,11 +49,6 @@ listTable model =
                 , { item="item #3", dueDate="today333", createdAt="333", priority=3 }
                 , { item="item #4", dueDate="today444", createdAt="444", priority=4 }
                 ]
-        -- items = tr[]
-        --         [ td [] [text "Hello there"]
-        --         , td [] [text "Hello there"]
-        --         , td [] [text "Hello asdf there"]
-        --         ]
 
         itemToRow = \ itm ->
                   tr [] 
