@@ -1,124 +1,194 @@
 module Main exposing (..)
 
+import Random exposing(..)
+import Mouse exposing (..)
+import Keyboard exposing (..)
 import Html exposing (..)
+import Http exposing (..)
+import Json.Decode as Decode
 import Html.Events exposing (onClick)
 import Debug
 
-main : Program Never Int Msg
-main =
-    Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
 
-
-type Msg
-    = Increment
-    | Decrement
-
-
-model : Int
-model =
-    0
-
-
-init : ( Int, Cmd Msg )
-init =
-    let
-        _ =
-            Debug.log "init is called"
-    in
-        ( 34, Cmd.none )
-
-
-subscriptions : Int -> Sub Msg
-subscriptions model =
-    Sub.none
-
-
-view : Int -> Html.Html Msg
-view model =
-    div []
-        [ button [ onClick Increment ] [ text "+" ]
-        , br [] []
-        , text (toString model)
-        , br [] []
-        , button [ onClick Decrement ] [ text "-" ]
-        ]
-
-
-update : Msg -> Int -> ( Int, Cmd Msg )
-update msg model =
-    case msg of
-        Increment ->
-            let
-                _ =
-                    Debug.log "incrementt is called"
-            in
-                ( model + 3, Cmd.none )
-
-        Decrement ->
-            ( model - 1, Cmd.none )
-
-
-
-----------------------------------------------------------------------
--- import Html exposing (..)
--- import Http
--- import Json.Decode as Decode
--- main =
---   Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
--- -- MODEL
--- type alias Model = List TodoItem
--- type Msg = FetchedTodos ( Result Http.Error (List TodoItem))
 -- type alias TodoItem =
 --     { item : String
 --     , due_date : String
 --     , created_at : String
 --     , priority : Int
 --     }
--- init : (Model, Cmd Msg)
--- init = ([], fetchTodos)
--- fetchTodos : Cmd Msg
--- fetchTodos =
---     let
---         url =
---             "http://localhost:1234/getall"
---     in
---         Http.send FetchedTodos (Http.get url todoListDecoder)
--- todoListDecoder : Decode.Decoder (List TodoItem)
--- todoListDecoder = Decode.at [""] (Decode.list todoItemDecoder)
--- subscriptions : Model -> Sub Msg
--- subscriptions model = Sub.none
--- update : Msg -> Model -> (Model, Cmd Msg)
--- update msg model =
---     case msg of
---         FetchedTodos (Ok lst) ->
---             let _ = Debug.log "OK: results: " lst
---             in
---                 (model, Cmd.none)
---         FetchedTodos (Err e) ->
---             let _ = Debug.log "ERR: results: " e
---             in
---                 (model, Cmd.none)
--- view : Model -> Html Msg
--- view model =
---   div []
---     [ listTable model
---     ]
--- listTable : Model -> Html Msg
--- listTable model =
---     let
---         items = [ { item="item #0", dueDate="today000", createdAt="000", priority=0 }
---                 , { item="item #1", dueDate="today111", createdAt="111", priority=1 }
---                 , { item="item #2", dueDate="today222", createdAt="222", priority=2 }
---                 , { item="item #3", dueDate="today333", createdAt="333", priority=3 }
---                 , { item="item #4", dueDate="today444", createdAt="444", priority=4 }
---                 ]
---         itemToRow = \ itm ->
---                   tr []
---                       [ td [] [text itm.item]
---                       , td [] [text itm.dueDate]
---                       , td [] [text itm.createdAt]
---                       , td [] [text (toString itm.priority) ]
---                       ]
---     in
---     div []
---         [ table [] (List.map itemToRow items) ]
+
+
+type Msg
+    = Increment
+    | Decrement
+    | NoOp
+    | MouseMsg Mouse.Position
+    | KeyMsg Keyboard.KeyCode
+    | RInt Int
+    | FetchUrl String
+
+
+type alias Model =
+    Pix
+
+
+type alias Pix =
+    { count : Int
+    , gifUrl : String
+    }
+
+-- int : Int -> Int -> Generator Int
+-- Generate 32-bit integers in a given range.
+
+-- int 0 10   -- an integer between zero and ten
+-- int -5 5   -- an integer between -5 and 5
+
+-- int minInt maxInt  -- an integer in the widest range feasible
+
+-- This function can produce values outside of the range [minInt,
+-- maxInt] but sufficient randomness is not guaranteed.
+
+--            ( model, Random.generate➊ OnResult (Random.int 1 6) )
+
+
+
+
+
+main : Program Never Model Msg
+main =
+    Html.program
+        { init = init -- init : ( model, Platform.Cmd msg )
+        , view = view -- view : model -> Html.Html msg
+        , update = update -- update : msg -> model -> ( model, Platform.Cmd msg )
+        , subscriptions = subscriptions -- subscriptions : model -> Sub msg
+        }
+
+
+-- update : msg -> model -> ( model, Platform.Cmd msg )
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        Increment ->
+            ( Debug.log "increment" ({ model | count = model.count + 3 }), Cmd.none )
+
+        Decrement ->
+            ( Debug.log "increment" ({ model | count = model.count - 2 }), Cmd.none )
+
+        NoOp ->
+            ( model, Cmd.none )
+
+
+-- //  | NewGif (Result Http.Error String)
+        MouseMsg p ->
+--            ( { model | gifUrl = "mouse: " ++ toString (p) },  Http.get urlCmd.none )
+            ( { model | gifUrl = "mouse: " ++ toString (p) },  Cmd.none )
+
+        KeyMsg k ->
+            ( { model | gifUrl = "  key: " ++ toString (k) }, Random.generate RInt (Random.int 1 23))
+
+        RInt i ->
+            ( { model | count = i }, Cmd.none)
+
+        FetchUrl url ->
+            ( { model | gifUrl = url }, Cmd.none)
+
+-- send : (Result Error a -> msg) -> Request a -> Cmd msg
+
+init : ( Model, Cmd Msg )
+init =
+    ( Pix 232 "google.com", Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Mouse.clicks MouseMsg
+        , Keyboard.downs KeyMsg
+        ]
+
+
+view : Model -> Html.Html Msg
+view model =
+    div []
+        [ button [ onClick Increment ] [ text "+" ]
+        , br [] []
+        , text (toString model)
+        , br [] []
+        , text (respond Yes)
+        , br [] []
+        , text (respond No)
+        , br [] []
+        , text (respond (Other "cuz I can't <br>"))
+        , br [] []
+        , text (readMessageStr (Message "codehere" "body here"))
+        , br [] []
+        , text (readMessageInt (Message "codehere" 234))
+        , br [] []
+        , button [ onClick Decrement ] [ text "-" ]
+        ]
+
+
+
+
+
+type Answer
+    = Yes
+    | No
+    | Other String
+
+
+respond : Answer -> String
+respond answer =
+    case answer of
+        Yes ->
+            ":-D Hooray!!!"
+
+        No ->
+            ":-( Why Not"
+
+        Other msg ->
+            msg
+
+
+type alias Message a =
+    { code : String, body : a }
+
+
+readMessage : Message () -> String
+readMessage msg =
+    "code: " ++ msg.code
+
+
+readMessageStr : Message String -> String
+readMessageStr msg =
+    "code: " ++ msg.code ++ " body: " ++ msg.body
+
+
+readMessageInt : Message Int -> String
+readMessageInt msg =
+    "code: " ++ msg.code ++ " body: " ++ toString (msg.body)
+
+
+
+-- getRandomGif : String -> String
+-- getRandomGif topic =
+--   let
+--     url =
+--       "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=" ++ topic
+--   in
+--       case Http.get url decodeGifUrl of
+--           Ok img ->
+--               img
+--           Err e ->
+--               e
+-- Http.send NewGif request
+
+
+decodeGifUrl : Decode.Decoder String
+decodeGifUrl =
+    Decode.at [ "data", "image_url" ] Decode.string
+
+
+
+-- https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=catz
